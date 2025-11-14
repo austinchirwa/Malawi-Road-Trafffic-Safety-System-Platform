@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "919968001642",
+    "project_id": "malawi-road-traffic-safety-sy",
+    "storage_bucket": "malawi-road-traffic-safety-sy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919968001642:android:0aec761073434c8063e413",
+        "android_client_info": {
+          "package_name": "com.example.malawiroadtraffficsafetysystem"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAd5I0Hdz0XebYVBkhWa0T6a7qKV1u-Idc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
