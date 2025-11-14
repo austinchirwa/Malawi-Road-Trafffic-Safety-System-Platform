@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +23,10 @@ import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DriveEta
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
@@ -38,6 +42,8 @@ import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -88,13 +94,13 @@ data class ServiceItem(
 @Composable
 fun ServicePage(
     onNavigate: (route: String) -> Unit = {},
-    onMenuClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
     // --- STATE MANAGEMENT ---
     var searchQuery by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    var isMenuExpanded by remember { mutableStateOf(false) }
 
     // --- Show scroll-to-top button only when the user has scrolled down ---
     val showScrollToTopButton by remember {
@@ -117,6 +123,17 @@ fun ServicePage(
             ServiceItem("Report Incident", "Report a traffic accident to authorities.", Icons.Default.Report, "report_incident"),
             ServiceItem("Vehicle Registration", "Register a new vehicle or transfer ownership.", Icons.Default.AppRegistration, "vehicle_registration"),
             ServiceItem("Insurance Services", "Manage your vehicle's insurance policies.", Icons.Default.Shield, "insurance_services")
+        )
+    }
+
+    // --- MENU DATA ---
+    val menuItems = remember {
+        listOf(
+            DrawerItem(Icons.Default.Notifications, "Notifications", "notifications"),
+            DrawerItem(Icons.Default.Badge, "License Details", "license_details"),
+            DrawerItem(Icons.Default.Event, "Schedule COF", "schedule_cof"),
+            DrawerItem(Icons.Default.Shield, "Insurance Service", "insurance_services"),
+            DrawerItem(Icons.Default.Call, "Emergency Contacts", "emergency_contacts")
         )
     }
 
@@ -147,8 +164,25 @@ fun ServicePage(
             TopAppBar(
                 title = { Text("RTSS SERVICES", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    Box {
+                        IconButton(onClick = { isMenuExpanded = true }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = isMenuExpanded,
+                            onDismissRequest = { isMenuExpanded = false }
+                        ) {
+                            menuItems.forEach { item ->
+                                DropdownMenuItem(
+                                    text = { Text(item.label) },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        onNavigate(item.route)
+                                    },
+                                    leadingIcon = { Icon(item.icon, contentDescription = item.label) }
+                                )
+                            }
+                        }
                     }
                 },
                 actions = {

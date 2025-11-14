@@ -1,11 +1,15 @@
 package com.example.malawiroadtraffficsafetysystem
 
 import ApplicationScreens.AuthenticationScreen
+import ApplicationScreens.ForgotPasswordScreen
 import ApplicationScreens.HomeScreen
+import ApplicationScreens.LearnerLicenseScreen
+import ApplicationScreens.NotificationsScreen
 import ApplicationScreens.PaymentScreen
 import ApplicationScreens.ProfileUpdateScreen
 import ApplicationScreens.ServicePage
 import ApplicationScreens.SettingsScreen
+import ApplicationScreens.SignUpScreen
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -27,13 +31,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSafetySystemTheme
+import services.CofApplicationScreen
+import services.CofDashboardScreen
+import services.DrivingSchoolDetailScreen
 import services.EnrollmentScreen
 import services.HighwayCodeScreen
 import services.RenewalsScreen
+import services.ReportIncidentScreen
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,27 +63,49 @@ fun MainApp() {
         val navController = rememberNavController()
         val context = LocalContext.current // For showing toasts
 
-        NavHost(navController = navController, startDestination = "authentication") { // Start destination is now authentication
+        NavHost(navController = navController, startDestination = "authentication") {
 
             composable("authentication") {
                 AuthenticationScreen(
-                    onLogInClick = { _, _ ->
-                        navController.navigate("home") { // Navigate to home after login
+                    onLoginSuccess = {
+                        navController.navigate("home") { 
                             popUpTo("authentication") { inclusive = true }
                         }
                     },
-                    onSignUpClick = { _, _, _ ->
-                        navController.navigate("home") { // Navigate to home after sign up
+                    onSignUpClick = {
+                        navController.navigate("signup")
+                    },
+                    onForgotPasswordClick = {
+                        navController.navigate("forgot_password")
+                    }
+                )
+            }
+
+            composable("signup") {
+                SignUpScreen(
+                    onSignUpSuccess = {
+                        navController.navigate("home") {
                             popUpTo("authentication") { inclusive = true }
                         }
-                    }
+                    },
+                    onNavigateToLogin = { navController.popBackStack() }
+                )
+            }
+
+            composable("forgot_password") {
+                ForgotPasswordScreen(
+                    onSendRecoveryLinkClick = { email ->
+                        // TODO: Implement actual password recovery logic
+                        Toast.makeText(context, "Recovery link sent to $email", Toast.LENGTH_LONG).show()
+                        navController.popBackStack()
+                    },
+                    onBackToLoginClick = { navController.popBackStack() }
                 )
             }
 
             composable("home") {
                 HomeScreen(
                     onNavigate = { route -> navController.navigate(route) },
-                    onMenuClick = { Toast.makeText(context, "Menu clicked!", Toast.LENGTH_SHORT).show() },
                     onProfileClick = { navController.navigate("profile_update") }
                 )
             }
@@ -82,9 +116,6 @@ fun MainApp() {
                         if (route != "services") {
                             navController.navigate(route)
                         }
-                    },
-                    onMenuClick = {
-                        Toast.makeText(context, "Menu clicked - Drawer not implemented yet.", Toast.LENGTH_SHORT).show()
                     },
                     onProfileClick = { navController.navigate("profile_update") }
                 )
@@ -97,7 +128,7 @@ fun MainApp() {
                     onSaveChanges = {
                         Toast.makeText(context, "Profile Saved!", Toast.LENGTH_SHORT).show()
                         navController.navigate("home") {
-                            popUpTo("profile_update") { inclusive = true } // Go back to home and clear the profile screen from the back stack
+                            popUpTo("profile_update") { inclusive = true } 
                         }
                     }
                 )
@@ -132,9 +163,19 @@ fun MainApp() {
                 EnrollmentScreen(
                     onBackClick = { navController.popBackStack() },
                     onEnrollClick = { school ->
-                        Toast.makeText(context, "Enrolled in ${school.name}", Toast.LENGTH_SHORT).show()
-                        navController.popBackStack()
+                        navController.navigate("school_details/${school.id}")
                     }
+                )
+            }
+
+            composable(
+                route = "school_details/{schoolId}",
+                arguments = listOf(navArgument("schoolId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                DrivingSchoolDetailScreen(
+                    schoolId = backStackEntry.arguments?.getString("schoolId"),
+                    onConfirm = { navController.navigate("payment") },
+                    onBackClick = { navController.popBackStack() }
                 )
             }
 
@@ -145,18 +186,55 @@ fun MainApp() {
                 )
             }
 
-            // --- Highway Code Screen ---
             composable("highway_code") {
-                HighwayCodeScreen(
+                HighwayCodeScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable("report_incident") {
+                ReportIncidentScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable("cof_application") {
+                CofApplicationScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSubmitClick = { plateNumber, vehicleModel ->
+                        val encodedPlate = URLEncoder.encode(plateNumber, StandardCharsets.UTF_8.toString())
+                        val encodedModel = URLEncoder.encode(vehicleModel, StandardCharsets.UTF_8.toString())
+                        navController.navigate("cof_dashboard/$encodedPlate/$encodedModel")
+                    }
+                )
+            }
+
+            composable(
+                route = "cof_dashboard/{plateNumber}/{vehicleModel}",
+                arguments = listOf(
+                    navArgument("plateNumber") { type = NavType.StringType },
+                    navArgument("vehicleModel") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                CofDashboardScreen(
+                    plateNumber = backStackEntry.arguments?.getString("plateNumber") ?: "",
+                    vehicleModel = backStackEntry.arguments?.getString("vehicleModel") ?: "",
                     onBackClick = { navController.popBackStack() }
                 )
             }
 
-            // --- Placeholder screens for remaining features ---
+            composable("notifications") {
+                NotificationsScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable("learner_license") {
+                LearnerLicenseScreen(
+                    onApplyClick = { navController.navigate("payment") }, // Navigate to a payment screen on successful application
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
             val placeholderRoutes = listOf(
-                "notifications", "vehicle_details", "report_feedback", "cof_application",
-                "learner_license", "citizen_reporting", "safety_awareness",
-                "fine_payment", "report_incident", "vehicle_registration", "insurance_services"
+                "vehicle_details", "report_feedback",
+                "citizen_reporting", "safety_awareness",
+                "fine_payment", "vehicle_registration", "insurance_services",
+                "license_details", "schedule_cof", "emergency_contacts"
             )
 
             placeholderRoutes.forEach { route ->

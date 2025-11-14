@@ -10,13 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -31,12 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,37 +39,34 @@ import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSaf
  * Stateful composable that connects to the ViewModel.
  */
 @Composable
-fun AuthenticationScreen(
+fun SignUpScreen(
     authViewModel: AuthViewModel = viewModel(),
-    onLoginSuccess: () -> Unit,
-    onSignUpClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {}
+    onSignUpSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val authResult by authViewModel.authResult.collectAsState()
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Observe the result from the ViewModel
     LaunchedEffect(authResult) {
         authResult?.let {
             isLoading = false
             if (it.isSuccess) {
-                onLoginSuccess() // Navigate on success
+                onSignUpSuccess()
             } else if (it.isError) {
-                Toast.makeText(context, it.errorMessage ?: "Authentication failed.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, it.errorMessage ?: "Sign-up failed.", Toast.LENGTH_SHORT).show()
             }
             authViewModel.resetAuthResult() // Reset after handling
         }
     }
 
-    AuthenticationScreenContent(
+    SignUpScreenContent(
         isLoading = isLoading,
-        onLoginClick = { email, password ->
+        onSignUpClick = { username, email, password ->
             isLoading = true
-            authViewModel.logIn(email, password)
+            authViewModel.signUp(username, email, password)
         },
-        onSignUpClick = onSignUpClick,
-        onForgotPasswordClick = onForgotPasswordClick
+        onNavigateToLogin = onNavigateToLogin
     )
 }
 
@@ -84,23 +74,17 @@ fun AuthenticationScreen(
  * Stateless, previewable composable for the UI.
  */
 @Composable
-private fun AuthenticationScreenContent(
+private fun SignUpScreenContent(
     isLoading: Boolean,
-    onLoginClick: (String, String) -> Unit,
-    onSignUpClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit
+    onSignUpClick: (String, String, String) -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (isLoading) {
                 CircularProgressIndicator()
             } else {
@@ -111,31 +95,20 @@ private fun AuthenticationScreenContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ReportProblem,
-                        contentDescription = "RTSS Platform Logo",
-                        modifier = Modifier.size(96.dp),
-                        tint = Color.Red
+                    Text("Create an Account", style = MaterialTheme.typography.headlineLarge)
+                    Text("Join the RTSS platform to get started.", style = MaterialTheme.typography.bodyLarge)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Username") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "RTSS PLATFORM",
-                        style = MaterialTheme.typography.headlineLarge
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Welcome to the Malawi Road Traffic Safety System",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
 
                     OutlinedTextField(
                         value = email,
@@ -158,28 +131,17 @@ private fun AuthenticationScreenContent(
                         singleLine = true
                     )
 
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        TextButton(
-                            onClick = onForgotPasswordClick,
-                            modifier = Modifier.align(Alignment.CenterEnd)
-                        ) {
-                            Text("Forgot password?")
-                        }
-                    }
-
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        onClick = { onLoginClick(email, password) },
-                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onSignUpClick(username, email, password) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("LOG IN")
+                        Text("SIGN UP")
                     }
 
-                    TextButton(onClick = onSignUpClick) {
-                        Text("Don\'t have an account? Sign Up")
+                    TextButton(onClick = onNavigateToLogin) {
+                        Text("Already have an account? Log In")
                     }
                 }
             }
@@ -189,13 +151,12 @@ private fun AuthenticationScreenContent(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun AuthenticationScreenPreview() {
+fun SignUpScreenPreview() {
     MalawiRoadTraffficSafetySystemTheme {
-        AuthenticationScreenContent(
+        SignUpScreenContent(
             isLoading = false,
-            onLoginClick = { _, _ -> },
-            onSignUpClick = {},
-            onForgotPasswordClick = {}
+            onSignUpClick = { _, _, _ -> },
+            onNavigateToLogin = {}
         )
     }
 }

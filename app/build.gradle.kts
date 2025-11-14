@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "2.0.0" // Added for serialization
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -50,8 +52,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.navigation:navigation-compose:2.7.7") // Added specific version
-    implementation("io.coil-kt:coil-compose:2.6.0") // Added Coil for image loading
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Firebase & DataConnect
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-database-ktx") // Added Realtime Database
+    implementation("com.google.firebase:firebase-dataconnect:16.0.0-beta04")
+
+    // Coroutines & Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1") // Updated to compatible version
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.1")
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

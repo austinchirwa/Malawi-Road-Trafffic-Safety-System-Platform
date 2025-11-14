@@ -34,30 +34,13 @@ import androidx.compose.ui.unit.dp
 import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSafetySystemTheme
 
 /**
- * Data class to hold information about a driving school.
- */
-data class DrivingSchool(
-    val name: String,
-    val location: String,
-    val price: String
-)
-
-/**
  * A screen that displays a list of driving schools with options to enroll.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnrollmentScreen(onBackClick: () -> Unit, onEnrollClick: (DrivingSchool) -> Unit) {
-    val schools = remember {
-        listOf(
-            DrivingSchool("Prestige Driving School", "Blantyre, Limbe", "MWK 150,000"),
-            DrivingSchool("Central Driving School", "Lilongwe, Area 47", "MWK 180,000"),
-            DrivingSchool("Mzuzu Moto Trainers", "Mzuzu, Katoto", "MWK 135,000"),
-            DrivingSchool("Zomba Safe Drivers", "Zomba, Matawale", "MWK 160,000"),
-            DrivingSchool("Capital City Drivers", "Lilongwe, Old Town", "MWK 175,000"),
-            DrivingSchool("Lakeshore Driving Academy", "Mangochi, Town", "MWK 190,000")
-        )
-    }
+    // The list of schools is now sourced from the allDrivingSchools list in drivingschool.kt
+    val schools = remember { allDrivingSchools }
 
     Scaffold(
         topBar = {
@@ -119,7 +102,7 @@ fun DrivingSchoolCard(school: DrivingSchool, onEnrollClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Location: ${school.location}",
+                text = "Rating: ${school.rating}/5.0", // Using rating from the detailed data class
                 style = MaterialTheme.typography.bodyLarge
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -143,6 +126,7 @@ fun DrivingSchoolCard(school: DrivingSchool, onEnrollClick: () -> Unit) {
 @Composable
 fun EnrollmentScreenPreview() {
     MalawiRoadTraffficSafetySystemTheme {
+        // The preview now works without needing a stub DrivingSchool object
         EnrollmentScreen(onBackClick = {}, onEnrollClick = {})
     }
 }
