@@ -1,5 +1,7 @@
 package ApplicationScreens
 
+import ApplicationScreens.viewmodels.AuthViewModel
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.LockReset
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,22 +25,67 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSafetySystemTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Stateful composable that connects to the ViewModel.
+ */
 @Composable
 fun ForgotPasswordScreen(
-    onSendRecoveryLinkClick: (String) -> Unit,
+    authViewModel: AuthViewModel = viewModel(),
+    onBackToLoginClick: () -> Unit
+) {
+    val authResult by authViewModel.authResult.collectAsState()
+    val isLoading by authViewModel.isLoading.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(authResult) {
+        authResult?.let {
+            if (it.isSuccess) {
+                Toast.makeText(context, "Recovery link sent to email", Toast.LENGTH_LONG).show()
+                onBackToLoginClick()
+            } else if (it.isError) {
+                Toast.makeText(context, it.errorMessage ?: "Failed to send link", Toast.LENGTH_LONG).show()
+            }
+            authViewModel.resetAuthResult()
+        }
+    }
+
+    ForgotPasswordScreenContent(
+        isLoading = isLoading,
+        onSendRecoveryLink = { email ->
+            if (email.isNotBlank()) {
+                authViewModel.sendPasswordResetEmail(email)
+            } else {
+                Toast.makeText(context, "Please enter your email address.", Toast.LENGTH_SHORT).show()
+            }
+        },
+        onBackToLoginClick = onBackToLoginClick
+    )
+}
+
+/**
+ * Stateless, previewable composable for the UI.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ForgotPasswordScreenContent(
+    isLoading: Boolean,
+    onSendRecoveryLink: (String) -> Unit,
     onBackToLoginClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -93,12 +141,17 @@ fun ForgotPasswordScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onSendRecoveryLinkClick(email) },
+                onClick = { onSendRecoveryLink(email) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(50.dp),
+                enabled = !isLoading
             ) {
-                Text("SEND RECOVERY LINK")
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("SEND RECOVERY LINK")
+                }
             }
         }
     }
@@ -108,8 +161,9 @@ fun ForgotPasswordScreen(
 @Composable
 fun ForgotPasswordScreenPreview() {
     MalawiRoadTraffficSafetySystemTheme {
-        ForgotPasswordScreen(
-            onSendRecoveryLinkClick = {},
+        ForgotPasswordScreenContent(
+            isLoading = false,
+            onSendRecoveryLink = {},
             onBackToLoginClick = {}
         )
     }

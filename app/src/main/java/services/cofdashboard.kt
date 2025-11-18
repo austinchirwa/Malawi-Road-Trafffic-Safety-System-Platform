@@ -1,10 +1,14 @@
 package services
 
+import ApplicationScreens.viewmodels.CofState
+import ApplicationScreens.viewmodels.CofViewModel
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,6 +20,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -28,6 +33,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSafetySystemTheme
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -48,20 +56,33 @@ import java.nio.charset.StandardCharsets
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CofDashboardScreen(
+    viewModel: CofViewModel = viewModel(),
     plateNumber: String,
     vehicleModel: String,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
-    var paymentStatus by remember { mutableStateOf("Pending Payment") }
-    val refNumber = remember { "COF-2025-${(10000..99999).random()}" }
-
-    val isPaymentConfirmed = paymentStatus == "Payment Confirmed"
-
-    // Decode the URL-encoded parameters passed from the previous screen
     val decodedPlateNumber = remember(plateNumber) { URLDecoder.decode(plateNumber, StandardCharsets.UTF_8.toString()) }
     val decodedVehicleModel = remember(vehicleModel) { URLDecoder.decode(vehicleModel, StandardCharsets.UTF_8.toString()) }
 
+    val applicationStatus by viewModel.applicationStatus.collectAsState()
+    val cofState by viewModel.cofState.collectAsState()
+
+    var paymentStatus by remember { mutableStateOf("Pending Payment") }
+    val refNumber = remember { "COF-2025-${(10000..99999).random()}" }
+
+    LaunchedEffect(decodedPlateNumber) {
+        viewModel.fetchApplicationStatus(decodedPlateNumber)
+    }
+
+    LaunchedEffect(applicationStatus) {
+        applicationStatus?.let {
+            // Assuming status logic based on backend, here we just update simple local state for payment demo
+            // In a real app, status would come from 'it.status'
+        }
+    }
+    
+    val isPaymentConfirmed = paymentStatus == "Payment Confirmed"
 
     Scaffold(
         topBar = {
@@ -75,38 +96,42 @@ fun CofDashboardScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item {
-                ApplicationSummaryCard(
-                    status = paymentStatus,
-                    refNumber = refNumber,
-                    plateNumber = decodedPlateNumber,
-                    vehicleModel = decodedVehicleModel
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                item {
+                    ApplicationSummaryCard(
+                        status = paymentStatus,
+                        refNumber = refNumber,
+                        plateNumber = decodedPlateNumber,
+                        vehicleModel = decodedVehicleModel,
+                        chassisNumber = applicationStatus?.chassisNumber ?: "Loading..."
+                    )
+                }
 
-            item {
-                PaymentStepCard(
-                    isPaymentConfirmed = isPaymentConfirmed,
-                    onConfirmPayment = {
-                        paymentStatus = "Payment Confirmed"
-                        Toast.makeText(context, "Payment successful!", Toast.LENGTH_LONG).show()
-                    }
-                )
-            }
+                item {
+                    PaymentStepCard(
+                        isPaymentConfirmed = isPaymentConfirmed,
+                        onConfirmPayment = {
+                            paymentStatus = "Payment Confirmed"
+                            Toast.makeText(context, "Payment successful!", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
 
-            item {
-                PlaceholderStepCard(
-                    title = "Step 2: Schedule Your Inspection",
-                    description = "Once payment is confirmed, you will be able to book a time slot for your vehicle inspection at your nearest DRTSS station.",
-                    enabled = isPaymentConfirmed
-                )
+                item {
+                    PlaceholderStepCard(
+                        enabled = isPaymentConfirmed
+                    )
+                }
+            }
+            
+            if (cofState == CofState.Loading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
     }
@@ -114,7 +139,7 @@ fun CofDashboardScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ApplicationSummaryCard(status: String, refNumber: String, plateNumber: String, vehicleModel: String) {
+private fun ApplicationSummaryCard(status: String, refNumber: String, plateNumber: String, vehicleModel: String, chassisNumber: String) {
     Card(elevation = CardDefaults.cardElevation(2.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Application Summary", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -122,6 +147,7 @@ private fun ApplicationSummaryCard(status: String, refNumber: String, plateNumbe
             InfoRow("Application Status:", status, if (status == "Payment Confirmed") Color(0xFF008000) else Color.Red)
             InfoRow("Reference Number:", refNumber)
             InfoRow("Vehicle:", "$plateNumber - $vehicleModel")
+            InfoRow("Chassis Number:", chassisNumber)
         }
     }
 }
@@ -129,7 +155,7 @@ private fun ApplicationSummaryCard(status: String, refNumber: String, plateNumbe
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PaymentStepCard(isPaymentConfirmed: Boolean, onConfirmPayment: () -> Unit) {
-    val context = LocalContext.current
+    // Removed unused context variable
 
     Card(
         elevation = CardDefaults.cardElevation(2.dp),
@@ -179,7 +205,11 @@ private fun PaymentStepCard(isPaymentConfirmed: Boolean, onConfirmPayment: () ->
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PlaceholderStepCard(title: String, description: String, enabled: Boolean) {
+private fun PlaceholderStepCard(enabled: Boolean) {
+    // Hardcoded strings to remove "always same value" warning
+    val title = "Step 2: Schedule Your Inspection"
+    val description = "Once payment is confirmed, you will be able to book a time slot for your vehicle inspection at your nearest RTSS station."
+
     Card(elevation = CardDefaults.cardElevation(2.dp), colors = CardDefaults.cardColors(containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = if (enabled) Color.Black else Color.Gray)

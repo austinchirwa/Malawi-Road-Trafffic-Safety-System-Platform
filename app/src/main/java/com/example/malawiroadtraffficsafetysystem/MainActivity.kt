@@ -94,11 +94,6 @@ fun MainApp() {
 
             composable("forgot_password") {
                 ForgotPasswordScreen(
-                    onSendRecoveryLinkClick = { email ->
-                        // TODO: Implement actual password recovery logic
-                        Toast.makeText(context, "Recovery link sent to $email", Toast.LENGTH_LONG).show()
-                        navController.popBackStack()
-                    },
                     onBackToLoginClick = { navController.popBackStack() }
                 )
             }

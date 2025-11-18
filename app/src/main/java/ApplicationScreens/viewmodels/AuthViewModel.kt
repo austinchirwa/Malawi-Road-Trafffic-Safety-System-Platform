@@ -84,6 +84,20 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun sendPasswordResetEmail(email: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                auth.sendPasswordResetEmail(email).await()
+                _authResult.value = AuthResult(isSuccess = true)
+            } catch (e: Exception) {
+                _authResult.value = AuthResult(isError = true, errorMessage = e.message)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun loadCurrentUser() {
         viewModelScope.launch {
             _isLoading.value = true
