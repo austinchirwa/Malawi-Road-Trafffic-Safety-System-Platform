@@ -1,7 +1,10 @@
 package ApplicationScreens
 
+import ApplicationScreens.utils.ValidationUtils
 import ApplicationScreens.viewmodels.DrivingSchool
 import ApplicationScreens.viewmodels.DrivingSchoolViewModel
+import ApplicationScreens.viewmodels.LearnerLicenseState
+import ApplicationScreens.viewmodels.LearnerLicenseViewModel
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,11 +55,29 @@ import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSaf
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearnerLicenseScreen(
+    learnerLicenseViewModel: LearnerLicenseViewModel = viewModel(),
     drivingSchoolViewModel: DrivingSchoolViewModel = viewModel(),
     onApplyClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val applicationState by learnerLicenseViewModel.applicationState.collectAsState()
+
+    // Observe application state
+    LaunchedEffect(applicationState) {
+        when (val state = applicationState) {
+            is LearnerLicenseState.Success -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                learnerLicenseViewModel.resetState()
+                onApplyClick()
+            }
+            is LearnerLicenseState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                learnerLicenseViewModel.resetState()
+            }
+            else -> Unit
+        }
+    }
 
     // --- STATE MANAGEMENT ---
     var fullName by remember { mutableStateOf("") }
@@ -209,9 +231,56 @@ fun LearnerLicenseScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        // TODO: Add form validation & save application to Firestore
-                        Toast.makeText(context, "Learner License Application Submitted!", Toast.LENGTH_LONG).show()
-                        onApplyClick()
+                        // Validate all form fields
+                        when {
+                            !ValidationUtils.isValidName(fullName) -> {
+                                Toast.makeText(context, ValidationUtils.getNameError(fullName), Toast.LENGTH_SHORT).show()
+                            }
+                            !ValidationUtils.isValidNationalId(nationalId) -> {
+                                Toast.makeText(context, ValidationUtils.getNationalIdError(nationalId), Toast.LENGTH_SHORT).show()
+                            }
+                            !ValidationUtils.isValidAge(dateOfBirth) -> {
+                                Toast.makeText(context, ValidationUtils.getAgeError(dateOfBirth), Toast.LENGTH_SHORT).show()
+                            }
+                            !ValidationUtils.isValidName(nationality) -> {
+                                Toast.makeText(context, "Nationality is required", Toast.LENGTH_SHORT).show()
+                            }
+                            physicalAddress.isBlank() -> {
+                                Toast.makeText(context, "Physical address is required", Toast.LENGTH_SHORT).show()
+                            }
+                            !ValidationUtils.isValidPhoneNumber(mobileNumber) -> {
+                                Toast.makeText(context, ValidationUtils.getPhoneError(mobileNumber), Toast.LENGTH_SHORT).show()
+                            }
+                            !ValidationUtils.isValidEmail(email) -> {
+                                Toast.makeText(context, ValidationUtils.getEmailError(email), Toast.LENGTH_SHORT).show()
+                            }
+                            selectedSchool == null -> {
+                                Toast.makeText(context, "Please select a driving school", Toast.LENGTH_SHORT).show()
+                            }
+                            selectedCategory == "Select Category" -> {
+                                Toast.makeText(context, "Please select a license category", Toast.LENGTH_SHORT).show()
+                            }
+                            hasMedicalCondition == null -> {
+                                Toast.makeText(context, "Please answer the medical declaration", Toast.LENGTH_SHORT).show()
+                            }
+                            else -> {
+                                // All validations passed - submit application to Firestore
+                                learnerLicenseViewModel.submitApplication(
+                                    fullName = fullName,
+                                    nationalId = nationalId,
+                                    dateOfBirth = dateOfBirth,
+                                    gender = selectedGender,
+                                    nationality = nationality,
+                                    physicalAddress = physicalAddress,
+                                    mobileNumber = mobileNumber,
+                                    email = email,
+                                    drivingSchoolId = selectedSchool?.id ?: "",
+                                    drivingSchoolName = selectedSchool?.name ?: "",
+                                    licenseCategory = selectedCategory,
+                                    hasMedicalCondition = hasMedicalCondition ?: false
+                                )
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp)
                 ) {

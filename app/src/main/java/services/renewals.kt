@@ -1,6 +1,5 @@
 package services
 
-import ApplicationScreens.viewmodels.RenewalApplication
 import ApplicationScreens.viewmodels.RenewalState
 import ApplicationScreens.viewmodels.RenewalsViewModel
 import android.widget.Toast
@@ -69,7 +68,7 @@ fun RenewalsScreen(
     LaunchedEffect(renewalState) {
         when (val state = renewalState) {
             is RenewalState.Success -> {
-                Toast.makeText(context, "Application submitted! Proceeding to payment...", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
                 onNavigateToPayment()
             }
@@ -201,8 +200,7 @@ fun RenewalsScreen(
                             }
 
                             if (fullName.isNotBlank() && idNumber.isNotBlank() && licenseNumber.isNotBlank() && licenseCode.isNotBlank() && vehicleRegNumber.isNotBlank() && trnNumber.isNotBlank()) {
-                                val application = RenewalApplication(
-                                    userId = userId,
+                                viewModel.submitApplication(
                                     fullName = fullName,
                                     idNumber = idNumber,
                                     licenseNumber = licenseNumber,
@@ -212,7 +210,6 @@ fun RenewalsScreen(
                                     trnNumber = trnNumber,
                                     insuranceProvider = insuranceProvider
                                 )
-                                viewModel.submitApplication(application)
                             } else {
                                 Toast.makeText(context, "Please fill in all required fields.", Toast.LENGTH_SHORT).show()
                             }

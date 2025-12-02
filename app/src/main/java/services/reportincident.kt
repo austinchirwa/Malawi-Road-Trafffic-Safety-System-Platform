@@ -1,9 +1,14 @@
 package services
 
+import ApplicationScreens.utils.LocationHelper
+import ApplicationScreens.utils.LocationResult
+import ApplicationScreens.utils.PermissionUtils
 import ApplicationScreens.viewmodels.IncidentReport
 import ApplicationScreens.viewmodels.ReportIncidentViewModel
 import ApplicationScreens.viewmodels.ReportState
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSafetySystemTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,21 +63,50 @@ fun ReportIncidentScreen(
 ) {
     val context = LocalContext.current
     val reportState by viewModel.reportState.collectAsState()
+    val scope = rememberCoroutineScope()
 
     var reporterName by remember { mutableStateOf("") }
     var contactNumber by remember { mutableStateOf("") }
     var incidentLocation by remember { mutableStateOf("") }
     var incidentDescription by remember { mutableStateOf("") }
+    var isLoadingLocation by remember { mutableStateOf(false) }
 
     val incidentTypes = remember { listOf("Accident", "Road Hazard", "Traffic Violation", "Broken Down Vehicle", "Other") }
     var selectedIncidentType by remember { mutableStateOf(incidentTypes[0]) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
+    // Location helper
+    val locationHelper = remember { LocationHelper(context) }
+    
+    // Permission launcher for location
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            // Permission granted, get location
+            scope.launch {
+                isLoadingLocation = true
+                when (val result = locationHelper.getCurrentLocation()) {
+                    is LocationResult.Success -> {
+                        incidentLocation = result.formattedAddress
+                        Toast.makeText(context, "Location obtained", Toast.LENGTH_SHORT).show()
+                    }
+                    is LocationResult.Error -> {
+                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                isLoadingLocation = false
+            }
+        } else {
+            Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Handle the result of the report submission
     LaunchedEffect(reportState) {
         when (val state = reportState) {
             is ReportState.Success -> {
-                Toast.makeText(context, "Report sent successfully!", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
                 onBackClick()
             }
@@ -125,8 +161,39 @@ fun ReportIncidentScreen(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Accident Location (e.g., road, nearest landmark)") },
                         trailingIcon = {
-                            IconButton(onClick = { /* TODO: GPS location fetching */ }) {
-                                Icon(Icons.Default.GpsFixed, "Get current location")
+                            IconButton(
+                                onClick = {
+                                    // Check and request location permission
+                                    if (PermissionUtils.isLocationPermissionGranted(context)) {
+                                        scope.launch {
+                                            isLoadingLocation = true
+                                            when (val result = locationHelper.getCurrentLocation()) {
+                                                is LocationResult.Success -> {
+                                                    incidentLocation = result.formattedAddress
+                                                    Toast.makeText(context, "Location obtained", Toast.LENGTH_SHORT).show()
+                                                }
+                                                is LocationResult.Error -> {
+                                                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                            isLoadingLocation = false
+                                        }
+                                    } else {
+                                        locationPermissionLauncher.launch(
+                                            arrayOf(
+                                                PermissionUtils.LOCATION_FINE,
+                                                PermissionUtils.LOCATION_COARSE
+                                            )
+                                        )
+                                    }
+                                },
+                                enabled = !isLoadingLocation
+                            ) {
+                                if (isLoadingLocation) {
+                                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                                } else {
+                                    Icon(Icons.Default.GpsFixed, "Get current location")
+                                }
                             }
                         }
                     )

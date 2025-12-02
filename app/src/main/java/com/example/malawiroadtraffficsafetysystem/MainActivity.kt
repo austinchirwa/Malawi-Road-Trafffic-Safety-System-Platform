@@ -1,6 +1,7 @@
 package com.example.malawiroadtraffficsafetysystem
 
 import ApplicationScreens.AuthenticationScreen
+import ApplicationScreens.ChangePasswordScreen
 import ApplicationScreens.ForgotPasswordScreen
 import ApplicationScreens.HomeScreen
 import ApplicationScreens.LearnerLicenseScreen
@@ -119,11 +120,22 @@ fun MainApp() {
             composable("profile_update") {
                 ProfileUpdateScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToChangePassword = { /* TODO: Navigate to a change password screen */ },
+                    onNavigateToChangePassword = { navController.navigate("change_password") },
                     onSaveChanges = {
                         Toast.makeText(context, "Profile Saved!", Toast.LENGTH_SHORT).show()
                         navController.navigate("home") {
                             popUpTo("profile_update") { inclusive = true } 
+                        }
+                    }
+                )
+            }
+
+            composable("change_password") {
+                ChangePasswordScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onPasswordChanged = {
+                        navController.navigate("home") {
+                            popUpTo("change_password") { inclusive = true }
                         }
                     }
                 )

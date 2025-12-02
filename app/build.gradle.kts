@@ -64,9 +64,13 @@ dependencies {
     implementation("com.google.firebase:firebase-database-ktx") // Added Realtime Database
     implementation("com.google.firebase:firebase-dataconnect:16.0.0-beta04")
 
+
     // Coroutines & Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1") // Updated to compatible version
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.1")
+
+    // Google Play Services (for Location)
+    implementation("com.google.android.gms:play-services-location:21.1.0")
 
 
     testImplementation(libs.junit)

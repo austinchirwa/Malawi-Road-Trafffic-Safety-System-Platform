@@ -57,7 +57,7 @@ fun CofApplicationScreen(
     LaunchedEffect(cofState) {
         when (val state = cofState) {
             is CofState.Success -> {
-                Toast.makeText(context, "Application Submitted Successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
                 onSubmitClick(plateNumber, vehicleModel)
             }

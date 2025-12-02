@@ -167,6 +167,51 @@ class AuthViewModel : ViewModel() {
     }
 
     /**
+     * Changes the user's password after re-authenticating with current password.
+     * This is required by Firebase for security reasons.
+     */
+    fun changePassword(
+        currentPassword: String,
+        newPassword: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val user = auth.currentUser
+                if (user != null && user.email != null) {
+                    // Re-authenticate user with current password
+                    val credential = com.google.firebase.auth.EmailAuthProvider.getCredential(
+                        user.email!!,
+                        currentPassword
+                    )
+                    
+                    user.reauthenticate(credential).await()
+                    
+                    // Update password
+                    user.updatePassword(newPassword).await()
+                    
+                    onSuccess()
+                } else {
+                    onError("User not authenticated")
+                }
+            } catch (e: Exception) {
+                val errorMessage = when {
+                    e.message?.contains("password is invalid") == true -> 
+                        "Current password is incorrect"
+                    e.message?.contains("network") == true -> 
+                        "Network error. Please check your connection"
+                    else -> e.message ?: "Failed to change password"
+                }
+                onError(errorMessage)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
      * A local, self-contained version of the .await() function.
      */
     private suspend fun <T> Task<T>.await(): T {
