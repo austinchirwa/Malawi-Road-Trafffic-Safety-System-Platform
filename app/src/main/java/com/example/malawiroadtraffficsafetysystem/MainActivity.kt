@@ -48,6 +48,13 @@ import services.ReportIncidentScreen
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
+import ApplicationScreens.LicenseDetailsScreen
+import ApplicationScreens.ScheduleCOFScreen
+import ApplicationScreens.InsuranceServicesScreen
+import ApplicationScreens.EmergencyContactsScreen
+
+// ... existing imports ...
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -237,11 +244,27 @@ fun MainApp() {
                 )
             }
 
+            // New Screens
+            composable("license_details") {
+                LicenseDetailsScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable("schedule_cof") {
+                ScheduleCOFScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable("insurance_services") {
+                InsuranceServicesScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable("emergency_contacts") {
+                EmergencyContactsScreen(onBackClick = { navController.popBackStack() })
+            }
+
             val placeholderRoutes = listOf(
                 "vehicle_details", "report_feedback",
                 "citizen_reporting", "safety_awareness",
-                "fine_payment", "vehicle_registration", "insurance_services",
-                "license_details", "schedule_cof", "emergency_contacts"
+                "fine_payment", "vehicle_registration"
             )
 
             placeholderRoutes.forEach { route ->
