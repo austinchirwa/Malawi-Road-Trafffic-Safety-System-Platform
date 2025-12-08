@@ -121,8 +121,7 @@ fun ServicePage(
             ServiceItem("Road Safety Awareness", "Access educational materials and campaigns.", Icons.Default.School, "safety_awareness"),
             ServiceItem("Traffic Fine Payment & Appeals", "Pay fines or appeal a traffic ticket.", Icons.Default.AccountBalanceWallet, "fine_payment"),
             ServiceItem("Report Incident", "Report a traffic accident to authorities.", Icons.Default.Report, "report_incident"),
-            ServiceItem("Vehicle Registration", "Register a new vehicle or transfer ownership.", Icons.Default.AppRegistration, "vehicle_registration"),
-            ServiceItem("Insurance Services", "Manage your vehicle's insurance policies.", Icons.Default.Shield, "insurance_services")
+            ServiceItem("Vehicle Registration", "Register a new vehicle or transfer ownership.", Icons.Default.AppRegistration, "vehicle_registration")
         )
     }
 
@@ -132,7 +131,6 @@ fun ServicePage(
             DrawerItem(Icons.Default.Notifications, "Notifications", "notifications"),
             DrawerItem(Icons.Default.Badge, "License Details", "license_details"),
             DrawerItem(Icons.Default.Event, "Schedule COF", "schedule_cof"),
-            DrawerItem(Icons.Default.Shield, "Insurance Service", "insurance_services"),
             DrawerItem(Icons.Default.Call, "Emergency Contacts", "emergency_contacts")
         )
     }

@@ -253,9 +253,7 @@ fun MainApp() {
                 ScheduleCOFScreen(onBackClick = { navController.popBackStack() })
             }
 
-            composable("insurance_services") {
-                InsuranceServicesScreen(onBackClick = { navController.popBackStack() })
-            }
+
 
             composable("emergency_contacts") {
                 EmergencyContactsScreen(onBackClick = { navController.popBackStack() })
