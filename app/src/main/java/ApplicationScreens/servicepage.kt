@@ -117,7 +117,7 @@ fun ServicePage(
             ServiceItem("COF Application", "Apply for a new Certificate of Fitness.", Icons.Default.VerifiedUser, "cof_application"),
             ServiceItem("Renew License", "Renew your driver's or vehicle license.", Icons.Default.DriveEta, "renew_license"),
             ServiceItem("Driver's Learner License", "Apply for your learner's permit to practice.", Icons.AutoMirrored.Filled.LibraryBooks, "learner_license"),
-            ServiceItem("Citizen Incident Reporting", "Report road hazards or unsafe conditions.", Icons.Default.ReportProblem, "citizen_reporting"),
+
             ServiceItem("Road Safety Awareness", "Access educational materials and campaigns.", Icons.Default.School, "safety_awareness"),
             ServiceItem("Traffic Fine Payment & Appeals", "Pay fines or appeal a traffic ticket.", Icons.Default.AccountBalanceWallet, "fine_payment"),
             ServiceItem("Report Incident", "Report a traffic accident to authorities.", Icons.Default.Report, "report_incident"),
