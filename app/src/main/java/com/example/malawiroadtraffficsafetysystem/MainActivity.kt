@@ -38,8 +38,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.malawiroadtraffficsafetysystem.ui.theme.MalawiRoadTraffficSafetySystemTheme
-import services.CofApplicationScreen
-import services.CofDashboardScreen
+import com.example.malawiroadtraffficsafetysystem.ui.screens.CofApplicationScreen
+import com.example.malawiroadtraffficsafetysystem.ui.screens.CofDashboardScreen
 import services.DrivingSchoolDetailScreen
 import services.EnrollmentScreen
 import services.HighwayCodeScreen
