@@ -260,7 +260,7 @@ fun MainApp() {
             }
 
             val placeholderRoutes = listOf(
-                "vehicle_details", "report_feedback",
+                "vehicle_details",
                 "safety_awareness",
                 "fine_payment", "vehicle_registration"
             )

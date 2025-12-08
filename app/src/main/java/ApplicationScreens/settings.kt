@@ -68,7 +68,6 @@ fun SettingsScreen(
             SettingItem("Notifications", "Configure push notifications", Icons.Default.Notifications, "notifications"),
             SettingItem("Driver & Vehicle Details", "View and update your documents", Icons.Default.DirectionsCar, "vehicle_details"),
             SettingItem("Services", "Access all traffic services", Icons.Default.MiscellaneousServices, "services"),
-            SettingItem("Report and Feedback", "Send us your feedback or report an issue", Icons.Default.Feedback, "report_feedback"),
             SettingItem("Log Out", "Sign out of your account", Icons.AutoMirrored.Filled.Logout, "logout")
         )
     }
